@@ -1,103 +1,71 @@
-import {useState} from 'react'
-import {Data} from './Components/Data'
-import * as XLSX from 'xlsx'
-
+import logo from './logo.svg';
+import './App.css';
+import Papa from 'papaparse'
+import { useEffect, useState } from 'react';
 function App() {
-  
-  // on change states
-  const [excelFile, setExcelFile]=useState(null);
-  const [excelFileError, setExcelFileError]=useState(null);  
- 
-  // submit
-  const [excelData, setExcelData]=useState(null);
-  // it will contain array of objects
+  const [data,setData]=useState([])
+  const[columnArray,setColum]=useState([])
+  const[values,setValues]=useState([])
+  const handleFile=(event)=>{
+    Papa.parse(event.target.files[0],{
+      header:true,
+      skipEmptyLines:true,
+      complete:function(result){
+        const columnArray=[];
+        const valuesArray=[];
+        result.data.map((d)=>{
+          columnArray.push(Object.keys(d));
+          valuesArray.push(Object.values(d));
+        });
+        setData(result.data);
+        setColum(columnArray[0]);
+        setValues(valuesArray)
 
-  // handle File
-  const fileType=['application/vnd.ms-excel'];
-  const handleFile = (e)=>{
-    let selectedFile = e.target.files[0];
-    if(selectedFile){
-      // console.log(selectedFile.type);
-      if(selectedFile&&fileType.includes(selectedFile.type)){
-        let reader = new FileReader();
-        reader.readAsArrayBuffer(selectedFile);
-        reader.onload=(e)=>{
-          setExcelFileError(null);
-          setExcelFile(e.target.result);
-        } 
       }
-      else{
-        setExcelFileError('Please select only excel file types');
-        setExcelFile(null);
-      }
-    }
-    else{
-      console.log('plz select your file');
-    }
+    })
   }
 
-  // submit function
-  const handleSubmit=(e)=>{
-    e.preventDefault();
-    if(excelFile!==null){
-      const workbook = XLSX.read(excelFile,{type:'buffer'});
-      const worksheetName = workbook.SheetNames[0];
-      const worksheet=workbook.Sheets[worksheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet);
-      setExcelData(data);
-    }
-    else{
-      setExcelData(null);
-    }
-  }
-  
   return (
-    <div className="container">
-
-      {/* upload file section */}
-      <div className='form'>
-        <form className='form-group' autoComplete="off"
-        onSubmit={handleSubmit}>
-          <label><h5>Upload Excel file</h5></label>
-          <br></br>
-          <input type='file' className='form-control'
-          onChange={handleFile} required></input>                  
-          {excelFileError&&<div className='text-danger'
-          style={{marginTop:5+'px'}}>{excelFileError}</div>}
-          <button type='submit' className='btn btn-success'
-          style={{marginTop:5+'px'}}>Submit</button>
-        </form>
-      </div>
-
-      <br></br>
-      <hr></hr>
-
-      {/* view file section */}
-      <h5>View Excel file</h5>
-      <div className='viewer'>
-        {excelData===null&&<>No file selected</>}
-        {excelData!==null&&(
-          <div className='table-responsive'>
-            <table className='table'>
-              <thead>
-                <tr>
-                  <th scope='col'>ID</th>
-                  <th scope='col'>First Name</th>
-                  <th scope='col'>Last Name</th>
-                  <th scope='col'>Gender</th>
-                  <th scope='col'>Country</th>
-                  <th scope='col'>Age</th>
-                  <th scope='col'>Date</th>                  
-                </tr>
-              </thead>
-              <tbody>
-                <Data excelData={excelData}/>
-              </tbody>
-            </table>            
+    <div className="App">
+<center>
+  <h1 className='mt-4 text-success'>Greeks of Gurukul</h1>
+  <div className='my-5'>
+    <input
+    type='file'
+    name='file'
+    accept='.csv'
+    onChange={handleFile}
+    style={{display:"block",margin:"10px aurto"}}
+    ></input>
+    <br/>
+    <table style={{borderCollapse:"collapse",border:"2px solid black", margin:"5px auto"}} className=' mx-3'>
+      <thead>
+        <tr>
+          {columnArray.map((col,i)=>(
+            <th style={{border:"1px solid black"}} key={i}>{col}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className='mx-1'>
+        {values.map((v,i)=>(
+          <tr key={i}>
+            {v.map((value,i)=>(
+              <div>
+              <td style={{border:"1px solid black"}} className='mx-1' key={i}>{value}</td>
+              
+              </div>
+            ))}
+          </tr>
+        ))}
+        {data.map((v,i)=>(
+          <div key={i}>
+            {console.log({v})}
           </div>
-        )}       
-      </div>
-
+        ))}
+      </tbody>
+    </table>
+  </div>
+</center>
     </div>
   );
 }
